@@ -18,6 +18,7 @@
     file_name:  .asciz      "tokenized_text.txt"
     word_count: .space      DICTIONARY_SIZE
     freq_file:  .asciz      "frequencies.txt"
+    f_d:        .word       0
 
 .section .bss
     file_buffer:     .space      FILE_BUFF_SIZE
@@ -27,41 +28,50 @@
 
 _start:
     ldr r0, =file_name      //puntero a nombre de archivo
-    mov r1, #0              //flags:    0_RDONLY
-    mov r7, #SYS_open        //system call to open files
-    swi 0                   //trigger system call
-    mov r6, r0              //Save file descriptor in R6
-
-    //read chunk
-    ldr r1, =file_buffer
-    mov r2, #FILE_BUFF_SIZE
+    mov r1, #0              //0_RDONLY
+    mov r2, #0              //no flags
+    mov r7, #SYS_open       //system call to open files
+    swi #0                   //trigger system call
+    mov r6, r0              //Save file descriptor in memory
+    mov r4, #0
+    
 read_chunk:
     mov r0, r6              //file descriptor to r0
     ldr r1, =file_buffer
     mov r2, #FILE_BUFF_SIZE
     mov r7, #SYS_read        //read file descriptor system call
-    swi 0                   //trigger system call
+    swi #0                   //trigger system call
 
     cmp r0, #0              //check if eof
     beq save_count
 
+    cmp r0, #FILE_BUFF_SIZE
+    beq no_null
+    mov r5, #0
+    add r0, r0, #1
+    strb r5, [r1, r0]
+
+    no_null:
     ldr r0, =file_buffer        //file buffer addr to r0
     ldr r1, =word_count          //load addr to word dictionary
     ldr r2, =words_buffer       //words buffer addr to r0
+
+    
     bl count_words
 
     b read_chunk
 
 count_words:
-    push {r4-r7, lr}
+    push {r5-r7, lr}
     mov r3, #0          //current buffer index
-    mov r4, #0          //current word buffer index
-
+    //mov r4, #0
     next_char_processing:
-        ldrb r5, [r0, r3]   //read next character from buffer
-        cmp r5, #0          //check if buffer has reached its end
+        
+        cmp r3, #FILE_BUFF_SIZE          //check if buffer has reached its end
         beq finish_counting
-
+        ldrb r5, [r0, r3]   //read next character from buffer
+        cmp r5, #0
+        beq finish_counting
         cmp r5, #SPACE       //check if its space (word divider)
         beq store_word      //if space, store word
 
@@ -74,7 +84,7 @@ count_words:
         mov r5, #0          //null terminator
         strb r5, [r2, r4]   //add null character to the word buffer
         mov r4, #0          //reset word buffer index
-
+        
         bl check_word_exists
 
         add r3, r3, #1      //increment buffer index, skip null character
@@ -135,7 +145,7 @@ count_words:
         bx lr
 
     finish_counting:
-        pop {r4-r7, lr}
+        pop {r5-r7, lr}
         bx lr
 
     strcmp:
@@ -201,6 +211,10 @@ count_words:
             bx lr
 
 save_count:
+    mov r0, r6
+    mov r7, #SYS_close
+    swi #0
+
     ldr r4, =word_count     //diccionario con frecuencias
     ldr r5, =words_buffer   //buffer para guardar numero en ascii
     ldr r7, =file_buffer   //buffer para guardar string a guardar en texto
@@ -286,15 +300,15 @@ save_to_file:
     ldr r0, =freq_file
     mov r1, #0777              //seteo de permisos a todos
     mov r7, #SYS_creat         //create file
-    swi 0  
+    swi #0  
 
     mov r7, #SYS_write         //write to file
     ldr r1, =file_buffer       //file name
     mov r2, r9                 // r9 has the string size
-    swi 0
+    swi #0
 
     mov r7, #SYS_close         
-    swi 0
+    swi #0
 end_program:
     mov r7, #SYS_exit           //system call to exit program
     mov r7, #SYS_exit           //system call to exit program

@@ -1,6 +1,42 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include <string.h>
+
+// Function to replace accented characters with their regular versions
+char normalize_char(char ch) {
+    switch (ch) {
+        
+        case 'Á': case 'À': case 'Ã': case 'Â': case 'Ä':
+            return 'a';
+        case 'é': case 'è': case 'ê': case 'ë':
+            return 'e';
+        case 'É': case 'È': case 'Ê': case 'Ë':
+            return 'e';
+        case 'í': case 'ì': case 'î': case 'ï':
+            return 'i';
+        case 'Í': case 'Ì': case 'Î': case 'Ï':
+            return 'i';
+        case 'ó': case 'ò': case 'õ': case 'ô': case 'ö':
+            return 'o';
+        case 'Ó': case 'Ò': case 'Õ': case 'Ô': case 'Ö':
+            return 'o';
+        case 'ú': case 'ù': case 'û': case 'ü':
+            return 'u';
+        case 'Ú': case 'Ù': case 'Û': case 'Ü':
+            return 'u';
+        case 'ñ':
+            return 'n';
+        case 'Ñ':
+            return 'n';
+        case 'ç':
+            return 'c';
+        case 'Ç':
+            return 'c';
+        default:
+            return ch;
+    }
+}
 
 void tokenize_file(const char *input_filename, const char *output_filename) {
     FILE *input_file = fopen(input_filename, "r");
@@ -21,6 +57,9 @@ void tokenize_file(const char *input_filename, const char *output_filename) {
 
     // Read the file character by character
     while ((ch = fgetc(input_file)) != EOF) {
+        ch = tolower(ch);               // Convert to lowercase
+        ch = normalize_char(ch);        // Replace accented characters
+
         if (isalnum(ch)) {
             // If it's a part of a word (alphanumeric), write it to the output file
             fputc(ch, output_file);
