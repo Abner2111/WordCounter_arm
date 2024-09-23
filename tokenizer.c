@@ -77,7 +77,7 @@ void tokenize_file(const char *input_filename, const char *output_filename) {
             
         }
     }
-
+    fputc(' ', output_file);
     // Close both files
     fclose(input_file);
     fclose(output_file);
