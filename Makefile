@@ -17,6 +17,7 @@ comp_run:
 
 run_tokenizer:
 	@echo "Executing tokenizer module (c) with input.txt"
+	@gcc tokenizer.c -o tokenizer
 	@./tokenizer input.txt
 
 run_histogram_maker:

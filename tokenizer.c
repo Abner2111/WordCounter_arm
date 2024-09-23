@@ -58,19 +58,23 @@ void tokenize_file(const char *input_filename, const char *output_filename) {
     // Read the file character by character
     while ((ch = fgetc(input_file)) != EOF) {
         ch = tolower(ch);               // Convert to lowercase
-        ch = normalize_char(ch);        // Replace accented characters
-
-        if (isalnum(ch)) {
+        //ch = normalize_char(ch);        // Replace accented characters
+    
+        if (isalnum(ch)|| (unsigned char)ch >= 128) {
             // If it's a part of a word (alphanumeric), write it to the output file
             fputc(ch, output_file);
             in_word = 1;
         } else {
             // If we encounter a non-word character (space, punctuation, etc.)
+            if (ch == '-'){
+                continue;
+            }
             if (in_word) {
                 // Write a space only if it marks the end of a word
                 fputc(' ', output_file);
                 in_word = 0;
             }
+            
         }
     }
 
